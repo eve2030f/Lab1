@@ -1,0 +1,41 @@
+#!/bin/bash
+
+#Validacion del ID del proceso
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <id_proceso>"
+  exit 1
+fi
+
+id_proceso=$1
+
+if ! ps -p $id_proceso > /dev/null; then
+  echo "ID del proceso: $id_proceso no encontrado."
+  exit 1
+fi
+
+#a. Nombre del proceso
+nomb_proceso=$(ps -o comm= -p $id_proceso)
+# b. Padre del proceso
+padre_proceso=$(ps -o ppid= -p $id_proceso)
+#d. Usuario
+usr=$(ps -o user= -p $id_proceso)
+#e. % de uso CPU
+uso_cpu=$(ps -o %cpu= -p $id_proceso)
+#f. Consumo memoria
+mem=$(ps -o %mem= -p $id_proceso)
+#g. Estado
+estado=$(ps -o state= -p $id_proceso)
+#h. Path
+path=$(readlink -f /proc/$id_proceso/exe)
+
+
+echo "Nombre del proceso: $nomb_proceso"
+echo "ID del proceso: $id_proceso"
+echo "Parent process ID: $padre_proceso"
+echo "Usuario propietario: $usr"
+echo "Porcentaje de uso de CPU: $uso_cpu%"
+echo "Consumo de memoria: $mem%"
+echo "Estado: $estado"
+echo "Path del ejecutable: $path"
+
