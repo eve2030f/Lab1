@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#Laboratorio 2 Parte 1. B82870
 #Validacion del ID del proceso
 
 if [ $# -ne 1 ]; then
