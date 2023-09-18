@@ -14,7 +14,7 @@ while true; do
 #Verifica la ejecucion del proceso
   if ! pgrep -x "$nombre_proc" > /dev/null; then
     echo "Proceso $nombre_proc no esta ejecutandose correctamente, se va a reiniciar."
-    ($comando_ejec &) #Se ejecuta en segundo plano
+    (eval "$comando_ejec" &) #Se ejecuta en segundo plano
   fi
   sleep 10 #Revisa cada 10 segs
 done
