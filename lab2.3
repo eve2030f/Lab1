@@ -1,0 +1,76 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <executable>"
+  exit 1
+fi
+
+executable=$1
+log_file="process_monitor.log"
+
+# Verificar si el ejecutable existe y es ejecutable
+if [ ! -x "$executable" ]; then
+  echo "El ejecutable $executable no existe o no es ejecutable."
+  exit 1
+fi
+
+# Función para matar el proceso y generar el gráfico
+function cleanup_and_generate_graph {
+  process_pid=$1
+
+  # Matar el proceso si aún está en ejecución
+  if ps -p $process_pid > /dev/null; then
+    kill -TERM $process_pid
+  fi
+
+  # Generar el gráfico con Gnuplot
+  generate_graph
+}
+
+# Función para generar el gráfico
+function generate_graph {
+  gnuplot << EOF
+set terminal png
+set output "process_monitor.png"
+set xlabel "Tiempo"
+set ylabel "Consumo (%)"
+set title "Monitoreo de CPU y Memoria del Proceso"
+set xdata time
+set timefmt "%Y-%m-%d %H:%M:%S"
+set format x "%H:%M:%S"
+plot "$log_file" using 1:2 with lines title "CPU Usage", "$log_file" using 1:3 with lines title "Memory Usage"
+EOF
+}
+
+# Ejecutar el proceso y obtener su PID
+$executable &
+process_pid=$!
+
+# Inicializar el archivo de registro
+echo "Timestamp CPUUsage MemoryUsage" > $log_file
+
+# Manejar la terminación del script
+trap "cleanup_and_generate_graph $process_pid; exit 0" INT TERM
+
+while true; do
+  # Obtener la fecha y hora actual
+  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  
+  # Obtener el consumo de CPU y memoria del proceso
+  cpu_usage=$(ps -o %cpu= -p $process_pid | awk '{print $1}')
+  memory_usage=$(ps -o %mem= -p $process_pid | awk '{print $1}')
+  
+  # Registrar los valores en el archivo de registro
+  echo "$timestamp $cpu_usage $memory_usage" >> $log_file
+  
+  sleep 1m  # Ajusta el intervalo según sea necesario
+
+  # Verificar si el proceso ha terminado
+  if ! ps -p $process_pid > /dev/null; then
+    cleanup_and_generate_graph $process_pid
+    break
+  fi
+done
+
+echo "Proceso finalizado. Gráfico generado en process_monitor.png."
+
