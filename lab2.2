@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#parte 2 del laboratorio
+
+if [ $# -ne 2 ]; then
+  echo "Indicar: $0 <nombre_proc> <comando_ejec>"
+  exit 1
+fi
+
+nombre_proc=$1
+comando_ejec=$2
+
+while true; do
+#Verifica la ejecucion del proceso
+  if ! pgrep -x "$nombre_proc" > /dev/null; then
+    echo "Proceso $nombre_proc no esta ejecutandose correctamente, se va a reiniciar."
+    (eval "$comando_ejec" &) #Se ejecuta en segundo plano
+  fi
+  sleep 10 #Revisa cada 10 segs
+done
+
+
+
